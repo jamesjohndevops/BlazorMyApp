@@ -1,0 +1,36 @@
+﻿@page "/setparamsasync/{Param?}"
+
+<PageTitle>Set Parameters Async</PageTitle>
+
+<h1>On Parameters Set Example</h1>
+
+<p>
+    Pass a datetime in the URI of the browser's address bar.
+    For example, add /1-1-2024 to the address.
+</p>
+
+<p>@message</p>
+
+@code {
+    private string message = "Not set";
+
+    [Parameter]
+    public string? Param { get; set; }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        if (parameters.TryGetValue<string>(nameof(Param), out var value))
+        {
+            if (value is null)
+            {
+                message = "The value of 'Param' is null.";
+            }
+            else
+            {
+                message = $"The value of 'Param' is {value}.";
+            }
+        }
+
+        await base.SetParametersAsync(parameters);
+    }
+}

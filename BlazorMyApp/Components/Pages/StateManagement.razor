@@ -1,0 +1,67 @@
+﻿@page "/state-management"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject ProtectedLocalStorage ProtectedLocalStore
+
+<h3>StateManagement - Counter</h3>
+
+@if (isConnected)
+{
+    <p>Current count: <strong>@currentCount</strong></p>
+    <button @onclick="IncrementCount">Increment</button>
+
+    <CascadingValue Value="@this">
+        @ChildContent
+    </CascadingValue>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    private int     currentCount;
+    private bool    isConnected;
+    private bool    isLoaded;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    public int CurrentCount { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ProtectedSessionStore.GetAsync<int>("count");
+        CurrentCount = result.Success ? result.Value : 0;
+        isLoaded = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isConnected = true;
+            await LoadStateAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadStateAsync()
+    {
+        var result = await ProtectedLocalStore.GetAsync<int>("count");
+        currentCount = result.Success ? result.Value : 0;
+    }
+
+    private async Task IncrementCount()
+    {
+        currentCount++;
+        await ProtectedLocalStore.SetAsync("count", currentCount);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await ProtectedSessionStore.SetAsync("count", CurrentCount);
+    }
+
+}
